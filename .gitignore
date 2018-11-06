@@ -1,0 +1,12 @@
+
+venv/
+
+client_secret\.json
+
+slidesData\.json
+
+storage\.json
+
+\.idea/workspace\.xml
+
+sheetsData\.json
