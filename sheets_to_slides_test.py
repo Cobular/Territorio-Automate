@@ -6,28 +6,16 @@ from oauth2client import file, client, tools
 import json
 
 # Assorted Variables
+# Creates the dict that will act as the reference in later parts of the code
 textbox_reference = {}
-
-# Random functions I use
-'''
-Replace a set of multiple sub strings with a new string in main string.
-'''
-def replaceMultiple(mainString, toBeReplaces, newString):
-    # Iterate over the strings to be replaced
-    for elem in toBeReplaces:
-        # Check if string is in the main string
-        if elem in mainString:
-            # Replace the string
-            mainString = mainString.replace(elem, newString)
-
-    return mainString
-
+# Creates an empty list to reduce the number of requests sent. I was actually hitting the cap!.
+# This will do one request per run
+requests = []
 
 # User defined variables
 sheetID = '1TcS0U8AdKQGcmAO1Hf4S8hrEs7BQ1aRqzOWFCx6o_ok'  # <--- Put the id of the sheet there
 presentationID = '1QFH68wLkhyfVag4c2JJ1tcEhgSIXhP5W0x-4vRbRrNY'  # <--- Put the id of the presentation
 dataRange = 'A2:I172'  # <--- Put the range of the data to process here. Currently only works for one sheet tab at a time
-
 
 # A ton of Authentication stuff from here to the next comment. Imporatnt but not very interesting
 SCOPES = (
@@ -66,8 +54,6 @@ print(textbox_reference)
 with open('sheetsData.json', 'w') as sheetsDataFile:
     json.dump(requestedSheetValues, sheetsDataFile, indent=4)
 
-# Creates an empty list to reduce the number of requests sent.
-requests = []
 # Iterate over the sheet and update the slide to match it.
 # Lots of JSON POST request bodies, so it's pretty messy-looking. Just collapse the requests.
 for row in requestedSheetValues:
@@ -78,7 +64,9 @@ for row in requestedSheetValues:
     if textbox_reference.get(str(row[0]).strip().lower()) is not None:
         # Control blighted tiles
         if row[5] == 'Blighted':
+            # Something changed, so the tile no longer needs to be set to no effects
             default = False
+            # The actual request body. Just keep this minimized
             requests.append([
                 {
                     "updateTextStyle": {
@@ -100,20 +88,22 @@ for row in requestedSheetValues:
                         "textRange": {
                             "type": "ALL"
                         },
-                        "fields": "*",
+                        "fields": "foregroundColor,fontSize",
                         "objectId": str(textbox_reference.get(str(row[0]).strip().lower())) + ""
                     }
                 }
             ])
             print('Made a tile Blighted')
+
         # Apply the savage effect
         if row[4] == "Savage":
+            # Something changed, so the tile no longer needs to be set to no effects
             default = False
+            # The actual request body. Just keep this minimized
             requests.append([
                 {
                     "updateTextStyle": {
                         "style": {
-                            "bold": "true",
                             "backgroundColor": {
                                 "opaqueColor": {
                                     "rgbColor": {
@@ -132,13 +122,15 @@ for row in requestedSheetValues:
                         "textRange": {
                             "type": "ALL"
                         },
-                        "fields": "*"
+                        "fields": "backgroundColor,fontSize"
                     }
                 }
             ])
             print('Made a tile Savage')
-        # Reset tiles with no effects to normal
+
+        # Reset tiles with no effects to normal. Only runs when no tile effect is applied
         if default:
+            # The actual request body. Just keep this minimized
             requests.append([
                 {
                     "updateTextStyle": {
@@ -157,9 +149,12 @@ for row in requestedSheetValues:
                 }
             ])
             print('Removed effects from a tile')
+
     else:
+        # Just here for debugging, not critical. TODO: Change this to python logging
         print('Skipped an item with a null ID')
-print(requests)
+
+# Finally send the one huge request
 body = {
         'requests': requests
     }
