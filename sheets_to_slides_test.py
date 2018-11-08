@@ -8,6 +8,8 @@ import json
 # Assorted Variables
 # Creates the dict that will act as the reference in later parts of the code
 textbox_reference = {}
+# Creates a dict that will store tile_name: [line_x,line_y]
+spawnpoint_reference = {}
 # Creates an empty list to reduce the number of requests sent. I was actually hitting the cap!.
 # This will do one request per run
 requests = []
@@ -51,8 +53,37 @@ for textboxes in requestedSlideValues[0]['pageElements']:
         pass
 print(textbox_reference)
 
+# This iterates over the list of page elements
+# and only adds the coordinates of the a line in an element group with a line and a shape in it
+for pageElement in requestedSlideValues[0]['pageElements']:
+    shapeName = ""
+    lineTransform = []
+    try:
+        if pageElement['elementGroup'] is not None:
+            for groupElement in pageElement['elementGroup']['children']:
+                try:
+                    if groupElement['line'] is not None:
+                        # Write the transform to a variable that will be used to create the array in a bit.
+                        lineTransform = [groupElement['transform']['translateX'], groupElement['transform']['translateY']]
+                except KeyError:
+                    pass
+                try:
+                    if groupElement['shape']['text'] is not None:
+                        # Saves the name of the shape in the group
+                        shapeName = groupElement['shape']['text']['textElements'][1]['textRun']['content']\
+                            .strip().lower()
+                except KeyError:
+                    pass
+                spawnpoint_reference.update({shapeName : lineTransform})
+    except KeyError:
+        pass
+print(spawnpoint_reference)
+
 with open('sheetsData.json', 'w') as sheetsDataFile:
     json.dump(requestedSheetValues, sheetsDataFile, indent=4)
+
+with open('slidesData.json', 'w') as slidesDataFile:
+    json.dump(requestedSlideValues, slidesDataFile, indent=4)
 
 # Iterate over the sheet and update the slide to match it.
 # Lots of JSON POST request bodies, so it's pretty messy-looking. Just collapse the requests.
@@ -60,6 +91,7 @@ for row in requestedSheetValues:
     # Sets to false if anything is set to the tile.
     # If the tile is normal, this stays true and is used to set the tile to default at the end
     default = True
+
     # Check to make sure that name of the row corresponds to an ID
     if textbox_reference.get(str(row[0]).strip().lower()) is not None:
         # Control blighted tiles
