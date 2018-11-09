@@ -21,10 +21,10 @@ dataRange = 'A2:I172'  # <--- Put the range of the data to process here. Current
 
 # A ton of Authentication stuff from here to the next comment. Imporatnt but not very interesting
 SCOPES = (
-    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/spreadsheets.readonly',
     'https://www.googleapis.com/auth/presentations'
 )
-store = file.Storage('storage.json')
+store = file.Storage('storage_main.json')
 creds = store.get()
 if not creds or creds.invalid:
     flow = client.flow_from_clientsecrets('client_secret.json', SCOPES)
@@ -74,15 +74,15 @@ for pageElement in requestedSlideValues[0]['pageElements']:
                             .strip().lower()
                 except KeyError:
                     pass
-                spawnpoint_reference.update({shapeName : lineTransform})
+                spawnpoint_reference.update({shapeName.strip().lower(): lineTransform})
     except KeyError:
         pass
 print(spawnpoint_reference)
 
-with open('sheetsData.json', 'w') as sheetsDataFile:
+with open('JSON_for_testing/sheetsData_main.json', 'w') as sheetsDataFile:
     json.dump(requestedSheetValues, sheetsDataFile, indent=4)
 
-with open('slidesData.json', 'w') as slidesDataFile:
+with open('JSON_for_testing/slidesData_main.json', 'w') as slidesDataFile:
     json.dump(requestedSlideValues, slidesDataFile, indent=4)
 
 # Iterate over the sheet and update the slide to match it.
