@@ -86,7 +86,7 @@ for pageElement in requestedSlideValues[0]['pageElements']:
 print(textbox_reference)
 
 # This iterates over the list of page elements
-# and only adds the coordinates of the a line in an element group with a line and a shape in it
+# and only adds thecoordinates of the a line in an element group with a line and a shape in it
 for pageElement in requestedSlideValues[0]['pageElements']:
     shapeName = ""  # Need this varriable to have this scope
     lineTransform = []  # Same here
@@ -113,7 +113,7 @@ for pageElement in requestedSlideValues[0]['pageElements']:
 print(spawnpoint_reference)
 
 # Creates the dict of tribe names and shape ids from the last slide.
-# Last slide must be
+# Last slide must be only filled with the groups of icons and tribe names.
 for pageElement in requestedSlideValues[-1]['pageElements']:
     tribeName = ""
     tribeId = ""
@@ -125,18 +125,21 @@ for pageElement in requestedSlideValues[-1]['pageElements']:
                         textElement = childElement['shape']['text']['textElements'][1]
                         try:
                             tribeName = textElement['textRun']['content'].strip().lower()
-                        except KeyError as error:
-                            print(error)
-                    else:
-                        tribeId = childElement['objectId']
-                except KeyError as error:
-                    print(error)
-    except KeyError as error:
-        print(error)
+                        except KeyError:
+                            pass
+                except KeyError:
+                    pass
+                try:
+                    if childElement['shape']['text'] is None:
+                        pass
+                except KeyError:
+                    tribeId = childElement['objectId']
+    except KeyError:
+        pass
     pin_refrence.update({tribeName.strip().lower(): tribeId})
 print(str(pin_refrence))
 
-for row in requestedSheetValues:
+for row in requestedSheetValues
     """Iterate over the sheet and update the slide to match it
     
     Lots of JSON POST request bodies, so it's pretty messy-looking. Just collapse the requests or the whole thing.
