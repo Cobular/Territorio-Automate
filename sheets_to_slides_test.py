@@ -30,6 +30,8 @@ textbox_reference = {}
 # Creates a dict that will store the spawnpoints for the tiles.
 # tile_name: [line_x,line_y]
 spawnpoint_reference = {}
+# Creates a dict that will store the
+pin_refrence = {}
 # Creates an empty list that all requests will be added to in order toreduce the number of requests sent.
 # I was actually hitting the cap! This will do one request per file run with the current setup.
 # Filled with tons of JSON stuff
@@ -57,12 +59,19 @@ SLIDES = discovery.build('slides', 'v1', http=HTTP)
 SHEETS = discovery.build('sheets', 'v4', http=HTTP)
 # </editor-fold>
 
-# Actually get the sheet and slides values data from the API. Returns a JSON     file for each one.
+# Actually get the sheet and slides values data from the API. Returns a JSON file for each one.
 print('** Fetching Data, may take a bit')
 requestedSheetValues = SHEETS.spreadsheets().values().get(range=dataRange, spreadsheetId=sheetID,
                                                           majorDimension='ROWS').execute().get('values')
 requestedSlideValues = SLIDES.presentations().get(presentationId=presentationID).execute().get('slides')
 
+# <editor-fold desc="Save the collected JSON values to disk for manual inspection. Mostly for dev & troubleshooting">
+with open('JSON_for_testing/sheetsData_main.json', 'w') as sheetsDataFile:
+    json.dump(requestedSheetValues, sheetsDataFile, indent=4)
+
+with open('JSON_for_testing/slidesData_main.json', 'w') as slidesDataFile:
+    json.dump(requestedSlideValues, slidesDataFile, indent=4)
+# </editor-fold>
 
 # This iterates over the list of page elements and only adds elements that have a text component to the
 # textbox_reference dict, which will be compared to the spreadsheet later
@@ -70,7 +79,7 @@ for pageElement in requestedSlideValues[0]['pageElements']:
     try:
         textbox_reference.update(
             {str(pageElement['shape']['text']['textElements'][1]['textRun']['content']).strip().lower():
-             str(pageElement['objectId']).strip().lower()}
+                 str(pageElement['objectId']).strip().lower()}
         )
     except KeyError:
         pass
@@ -79,21 +88,22 @@ print(textbox_reference)
 # This iterates over the list of page elements
 # and only adds the coordinates of the a line in an element group with a line and a shape in it
 for pageElement in requestedSlideValues[0]['pageElements']:
-    shapeName = ""
-    lineTransform = []
+    shapeName = ""  # Need this varriable to have this scope
+    lineTransform = []  # Same here
     try:
         if pageElement['elementGroup'] is not None:
             for groupElement in pageElement['elementGroup']['children']:
                 try:
                     if groupElement['line'] is not None:
                         # Write the transform to a variable that will be used to create the array in a bit.
-                        lineTransform = [groupElement['transform']['translateX'], groupElement['transform']['translateY']]
+                        lineTransform = [groupElement['transform']['translateX'],
+                                         groupElement['transform']['translateY']]
                 except KeyError:
                     pass
                 try:
                     if groupElement['shape']['text'] is not None:
                         # Saves the name of the shape in the group
-                        shapeName = groupElement['shape']['text']['textElements'][1]['textRun']['content']\
+                        shapeName = groupElement['shape']['text']['textElements'][1]['textRun']['content'] \
                             .strip().lower()
                 except KeyError:
                     pass
@@ -102,12 +112,29 @@ for pageElement in requestedSlideValues[0]['pageElements']:
         pass
 print(spawnpoint_reference)
 
-with open('JSON_for_testing/sheetsData_main.json', 'w') as sheetsDataFile:
-    json.dump(requestedSheetValues, sheetsDataFile, indent=4)
-
-with open('JSON_for_testing/slidesData_main.json', 'w') as slidesDataFile:
-    json.dump(requestedSlideValues, slidesDataFile, indent=4)
-
+# Creates the dict of tribe names and shape ids from the last slide.
+# Last slide must be
+for pageElement in requestedSlideValues[-1]['pageElements']:
+    tribeName = ""
+    tribeId = ""
+    try:
+        if pageElement['elementGroup'] is not None:
+            for childElement in pageElement['elementGroup']['children']:
+                try:
+                    if childElement['shape']['text'] is not None:
+                        textElement = childElement['shape']['text']['textElements'][1]
+                        try:
+                            tribeName = textElement['textRun']['content'].strip().lower()
+                        except KeyError as error:
+                            print(error)
+                    else:
+                        tribeId = childElement['objectId']
+                except KeyError as error:
+                    print(error)
+    except KeyError as error:
+        print(error)
+    pin_refrence.update({tribeName.strip().lower(): tribeId})
+print(str(pin_refrence))
 
 for row in requestedSheetValues:
     """Iterate over the sheet and update the slide to match it
@@ -214,6 +241,6 @@ for row in requestedSheetValues:
 
 # Finally send the one huge request
 body = {
-        'requests': requests
-    }
+    'requests': requests
+}
 response = SLIDES.presentations().batchUpdate(presentationId=presentationID, body=body).execute()
