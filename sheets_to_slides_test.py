@@ -12,6 +12,8 @@ from apiclient import discovery
 from httplib2 import Http
 from oauth2client import file, client, tools
 import json
+import random
+import string
 
 # <editor-fold desc="Author Data">
 __author__ = "Jacob Cover"
@@ -36,6 +38,7 @@ pin_refrence = {}
 # I was actually hitting the cap! This will do one request per file run with the current setup.
 # Filled with tons of JSON stuff
 requests = []
+requests_test = []
 # Stores the ID of the sheet to get the data from
 sheetID = '1TcS0U8AdKQGcmAO1Hf4S8hrEs7BQ1aRqzOWFCx6o_ok'
 # Stores the ID of the presentation to apply the effects to
@@ -86,7 +89,7 @@ for pageElement in requestedSlideValues[0]['pageElements']:
 print(textbox_reference)
 
 # This iterates over the list of page elements
-# and only adds thecoordinates of the a line in an element group with a line and a shape in it
+# and only adds the coordinates of the a line in an element group with a line and a shape in it
 for pageElement in requestedSlideValues[0]['pageElements']:
     shapeName = ""  # Need this varriable to have this scope
     lineTransform = []  # Same here
@@ -137,23 +140,23 @@ for pageElement in requestedSlideValues[-1]['pageElements']:
     except KeyError:
         pass
     pin_refrence.update({tribeName.strip().lower(): tribeId})
-print(str(pin_refrence))
+print(pin_refrence)
 
-for row in requestedSheetValues
+for row in requestedSheetValues:
     """Iterate over the sheet and update the slide to match it
     
     Lots of JSON POST request bodies, so it's pretty messy-looking. Just collapse the requests or the whole thing.
     """
     # Sets to false if anything is set to the tile.
     # If the tile is normal, this stays true and is used to set the tile to default at the end
-    default = True
+    text_default = True
 
     # Check to make sure that name of the row corresponds to an ID
     if textbox_reference.get(str(row[0]).strip().lower()) is not None:
         # Control blighted tiles
         if row[5] == 'Blighted':
             # Something changed, so the tile no longer needs to be set to no effects
-            default = False
+            text_default = False
             # The actual request body. Just keep this minimized
             requests.append([
                 {
@@ -186,7 +189,7 @@ for row in requestedSheetValues
         # Apply the savage effect
         if row[4] == "Savage":
             # Something changed, so the tile no longer needs to be set to no effects
-            default = False
+            text_default = False
             # The actual request body. Just keep this minimized
             requests.append([
                 {
@@ -217,7 +220,7 @@ for row in requestedSheetValues
             print('Made a tile Savage')
 
         # Reset tiles with no effects to normal. Only runs when no tile effect is applied
-        if default:
+        if text_default:
             # The actual request body. Just keep this minimized
             requests.append([
                 {
@@ -237,6 +240,30 @@ for row in requestedSheetValues
                 }
             ])
             print('Removed effects from a tile')
+
+        for tribe_name in pin_refrence:
+            if tribe_name == row[10]:
+                alpha = string.ascii_letters + string.digits + "_"
+                spawnedPinID = "".join(random.choice(alpha) for i in range(50))
+                requests_test.append([
+                    {
+                        "": {
+                            "objectId": pin_refrence.get(row[10]),
+                            "objectIds": {
+                                pin_refrence.get(row[10]): spawnedPinID
+                            }
+                        },
+                        "updatePageElementTransform": {
+                            "applyMode": "ABSOLUTE",
+                            "objectId": spawnedPinID,
+                            "transform": {
+                                "translateX": spawnpoint_reference.get(row[0])[0],
+                                "translateY": spawnpoint_reference.get(row[0])[1],
+                                "unit": "EMU"
+                            }
+                        }
+                    }
+                ])
 
     else:
         # Just here for debugging, not critical. TODO: Change this to python logging
