@@ -1,16 +1,15 @@
 import json
+from string import Template
 from apiclient import discovery
 from httplib2 import Http
 from oauth2client import file, client, tools
-
-# Creates a JSON for all the pins. Has to be updated manually
+import random
+import string
 
 pinCreationDict = {
-    "pluto":
-        {
           "createShape": {
             "elementProperties": {
-              "pageObjectId": "{objectID}",
+              "pageObjectId": "$objectID",
               "size": {
                 "height": {
                   "magnitude": 3000000,
@@ -22,28 +21,28 @@ pinCreationDict = {
                 }
               },
               "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0532,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
+                "scaleX": "$scaleX",
+                "scaleY": "$scaleY",
+                "translateX": "$translateX",
+                "translateY": "$translateY",
                 "unit": "EMU"
               }
             },
-            "objectId": "{objectID}",
-            "shapeType": "RECTANGLE"
+            "objectId": "$objectID",
+            "shapeType": "$shapeType"
           },
           "updateShapeProperties": {
             "fields": "outline,solidFill",
-            "objectId": "{objectID}",
+            "objectId": "$objectID",
             "shapeProperties": {
               "outline": {
                 "outlineFill": {
                   "solidFill": {
                     "color": {
                       "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
+                        "red": "$outlineFillRed",
+                        "green": "$outlineFillGreen",
+                        "blue": "$outlineFillBlue"
                       }
                     }
                   }
@@ -53,878 +52,105 @@ pinCreationDict = {
                 "solidFill": {
                   "color": {
                     "rgbColor": {
-                      "red": 0,
-                      "green": 1,
-                      "blue": 1
+                      "red": "=solidFillRed=",
+                      "green": "=solidFillGreen=",
+                      "blue": "=solidFillBlue="
                     }
                   }
                 }
               }
             }
           }
-        },
-    "sylvian":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0531,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "RECTANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 1,
-                      "green": 1,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "builder":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "ELLIPSE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 1,
-                      "green": 0,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "amyca":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "ELLIPSE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "objectID",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0,
-                      "green": 0,
-                      "blue": 1
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "crescent":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "ELLIPSE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "objectID",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0,
-                      "green": 1,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "seldnac":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0,
-                      "green": 1,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "donglathot":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.6,
-                      "green": 0,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "sponk":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.6,
-                      "green": 0,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "themass":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.79,
-                      "green": 0.85,
-                      "blue": 0.99
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "khappitawlists":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "RECTANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.93,
-                      "green": 1,
-                      "blue": 0.25
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "biggireds":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.8,
-                      "green": 0,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "mothertribe":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 1,
-                      "green": 0.85,
-                      "blue": 0.4
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "hejeebs":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 1,
-                      "green": 0.6,
-                      "blue": 0
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "dravon":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "ELLIPSE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.65,
-                      "green": 0.3,
-                      "blue": 0.47
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "hingadingadurgen":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.4,
-                      "green": 0.3,
-                      "blue": 0.65
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "feru-anri":
-        {
-          "createShape": {
-            "elementProperties": {
-              "pageObjectId": "{objectID}",
-              "size": {
-                "height": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                },
-                "width": {
-                  "magnitude": 3000000,
-                  "unit": "EMU"
-                }
-              },
-              "transform": {
-                "scaleX": 0.0532,
-                "scaleY": 0.0531,
-                "translateX": "{translateX}",
-                "translateY": "{translateY}",
-                "unit": "EMU"
-              }
-            },
-            "objectId": "{objectID}",
-            "shapeType": "TRIANGLE"
-          },
-          "updateShapeProperties": {
-            "fields": "outline,solidFill",
-            "objectId": "{objectID}",
-            "shapeProperties": {
-              "outline": {
-                "outlineFill": {
-                  "solidFill": {
-                    "color": {
-                      "rgbColor": {
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
-                      }
-                    }
-                  }
-                }
-              },
-              "shapeBackgroundFill": {
-                "solidFill": {
-                  "color": {
-                    "rgbColor": {
-                      "red": 0.47,
-                      "green": 0.56,
-                      "blue": 0.61
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-}
-print(str(pinCreationDict.get("pluto")))
-plutoJSON = pinCreationDict.get("pluto")
-plutoJSON_str = json.dumps(plutoJSON).replace("{", "{{").replace("}", "}}")
-plutoJSON_str_2 = str(plutoJSON_str).format(objectID="sadfwerfwerf", translateX=5, translateY=6)
+        }
+
+print(str(pinCreationDict))
+plutoJSON_template = Template(str(pinCreationDict))
+print(plutoJSON_template.safe_substitute(objectID="djbsdfjfdrf"))
 # plutoJSON_reloaded = json.loads(plutoJSON_str.strip("\\"))
 # print(str(pinCreationDict.get("pluto")).format(objectID="sadfwerfwerf", translateX=5, translateY=6))
+alpha = string.ascii_letters + string.digits + "_"
+spawnedPinID = "".join(random.choice(alpha) for i in range(50))
+referencePinCreationDict = {
+    "createShape": {
+        "elementProperties": {
+            "pageObjectId": "$objectID",
+            "size": {
+                "height": {
+                    "magnitude": 3000000,
+                    "unit": "EMU"
+                },
+                "width": {
+                    "magnitude": 3000000,
+                    "unit": "EMU"
+                }
+            },
+            "transform": {
+                "scaleX": 0.0532,
+                "scaleY": 0.0532,
+                "translateX": "$translateX",
+                "translateY": "$translateY",
+                "unit": "EMU"
+            }
+        },
+        "objectId": "$objectID",
+        "shapeType": "$shapeType"
+    },
+    "updateShapeProperties": {
+        "fields": "outline,solidFill",
+        "objectId": "$objectID",
+        "shapeProperties": {
+            "outline": {
+                "outlineFill": {
+                    "solidFill": {
+                        "color": {
+                            "rgbColor": {
+                                "red": "$outlineFillRed",
+                                "green": "$outlineFillGreen",
+                                "blue": "$outlineFillBlue"
+                            }
+                        }
+                    }
+                }
+            },
+            "shapeBackgroundFill": {
+                "solidFill": {
+                    "color": {
+                        "rgbColor": {
+                            "red": "$solidFillRed",
+                            "green": "$solidFillGreen",
+                            "blue": "$solidFillBlue"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+referencePinCreationTemplate = Template(str(referencePinCreationDict))
+tribeName = "plutos".strip().lower()
+pinSpecReference = {
+    'plutos': {
+        "shapeType": "RECTANGLE",
+        "outlineFillRed": "0",
+        "outlineFillBlue": "0",
+        "outlineFillGreen": "0",
+        "solidFillRed": "0",
+        "solidFillBlue": "1",
+        "solidFillGreen": "1"
+    }
+}
+pinSpawnpointReference = {
+    "plutos": [10000, 2000202]
+}
 
-with open('JSON_for_testing/pinCreationRequests.json', 'w') as pinCreationJSON:
-    json.dump(pinCreationDict, pinCreationJSON, indent=4)
+
+print(referencePinCreationTemplate.substitute(objectID=spawnedPinID,
+                                        translateX=pinSpawnpointReference.get(tribeName)[0],
+                                        translateY=pinSpawnpointReference.get(tribeName)[1],
+                                        shapeType=pinSpecReference.get(tribeName).get("shapeType"),
+                                        outlineFillRed=pinSpecReference.get(tribeName).get("outlineFillRed"),
+                                        outlineFillGreen=pinSpecReference.get(tribeName).get("outlineFillGreen"),
+                                        outlineFillBlue=pinSpecReference.get(tribeName).get("outlineFillBlue"),
+                                        solidFillRed=pinSpecReference.get(tribeName).get("solidFillRed"),
+                                        solidFillGreen=pinSpecReference.get(tribeName).get("solidFillGreen"),
+                                        solidFillBlue=pinSpecReference.get(tribeName).get("solidFillBlue")))
