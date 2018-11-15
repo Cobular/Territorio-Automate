@@ -8,15 +8,15 @@ it requires the correct spreadsheet in the sheetID and presentationID fields.
 
 from __future__ import print_function
 
-from apiclient import discovery
-from httplib2 import Http
-from oauth2client import file, client, tools
 import json
 import random
 import string
 from string import Template
 import re
 import traceback
+from typing import Dict
+import JSON_methods
+import methods
 
 # <editor-fold desc="Author Data">
 __author__ = "Jacob Cover"
@@ -31,7 +31,7 @@ __email__ = "coverj715+territorio@gmail.com"
 # <editor-fold desc="Variable Definitions">
 # Creates the dict that will act as the reference in later parts of the code
 # tile_name: objectID
-textbox_reference = {}
+textbox_reference = {}  # type: Dict[str, str]
 # Creates a dict that will store the spawnpoints for the tiles.
 # tile_name: [line_x,line_y]
 spawnpoint_reference = {}
@@ -60,85 +60,23 @@ presentationID = '1QFH68wLkhyfVag4c2JJ1tcEhgSIXhP5W0x-4vRbRrNY'
 dataRange = 'A240:AE240'
 # </editor-fold>
 
-# <editor-fold desc="Authentication Stuff">
-SCOPES = (
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
-    'https://www.googleapis.com/auth/presentations'
-)
-store = file.Storage('storage_main.json')
-creds = store.get()
-if not creds or creds.invalid:
-    flow = client.flow_from_clientsecrets('client_secret.json', SCOPES)
-    creds = tools.run_flow(flow, store)
-HTTP = creds.authorize(Http())
-SLIDES = discovery.build('slides', 'v1', http=HTTP)
-SHEETS = discovery.build('sheets', 'v4', http=HTTP)
-# </editor-fold>
+# Authenticate with the google APIs
+SLIDES, SHEETS = methods.auth()
 
 # Actually get the sheet and slides values data from the API. Returns a JSON file for each one.
-print('** Fetching Data, may take a bit')
-requestedSheetValues = SHEETS.spreadsheets().values().get(range=dataRange, spreadsheetId=sheetID,
-                                                          majorDimension='ROWS').execute().get('values')
-requestedSlideValues = SLIDES.presentations().get(presentationId=presentationID).execute().get('slides')
+requestedSheetValues, requestedSlideValues = methods.download(SLIDES, SHEETS, sheetID, presentationID, dataRange)
 
-# <editor-fold desc="Save the collected JSON values to disk for manual inspection. Mostly for dev & troubleshooting">
-with open('JSON_for_testing/sheetsData_main.json', 'w') as sheetsDataFile:
-    json.dump(requestedSheetValues, sheetsDataFile, indent=4)
-
-with open('JSON_for_testing/slidesData_main.json', 'w') as slidesDataFile:
-    json.dump(requestedSlideValues, slidesDataFile, indent=4)
-# </editor-fold>
+# Save the collected JSON values to disk for manual inspection. Mostly for dev & troubleshooting
+methods.save_data(requestedSlideValues, requestedSheetValues)
 
 # This iterates over the list of page elements and only adds elements that have a text component to the
 # textbox_reference dict, which will be compared to the spreadsheet later
-for pageElement in requestedSlideValues[0]['pageElements']:
-    try:
-        for textElement in pageElement['shape']['text']['textElements']:
-            try:
-                textbox_reference.update(
-                    {re.sub('[^A-Za-z0-9]+', '', str(textElement['textRun']['content']).strip().lower()):
-                         str(pageElement['objectId']).strip().lower()}
-                )
-            except KeyError:
-                pass
-    except KeyError:
-        pass
-
+textbox_reference = methods.create_textbox_reference(requestedSlideValues, 0)
 print(textbox_reference)
 
 # This iterates over the list of page elements
 # and only adds the coordinates of the a line in an element group with a line and a shape in it
-for pageElement in requestedSlideValues[0]['pageElements']:
-    shapeName = ""  # Need this varriable to have this scope
-    lineTransform = []  # Same here
-    try:
-        if pageElement['elementGroup'] is not None:
-            for groupElement in pageElement['elementGroup']['children']:
-                try:
-                    if groupElement['line'] is not None:
-                        # Write the transform to a variable that will be used to create the array in a bit.
-                        lineTransform = [groupElement['transform']['translateX'],
-                                         groupElement['transform']['translateY']]
-                except KeyError:
-                    pass
-                try:
-                    if groupElement['shape']['text'] is not None:
-                        # Saves the name of the shape in the group
-                        shapeName = re.sub('[^A-Za-z0-9]+', '', str(groupElement['shape']['text']['textElements'][1]['textRun']['content']).strip().lower())
-
-                        # Adds the textbox's info to the textbox_reference
-                        try:
-                            textbox_reference.update(
-                                {re.sub('[^A-Za-z0-9]+', '', str(groupElement['shape']['text']['textElements'][1]['textRun']['content']).strip().lower()):
-                                     str(groupElement['objectId']).strip().lower()}
-                            )
-                        except KeyError:
-                            pass
-                except KeyError:
-                    pass
-                spawnpoint_reference.update({shapeName.strip().lower(): lineTransform})
-    except KeyError:
-        pass
+spawnpoint_reference = methods.create_spawnpoint_reference(requestedSlideValues)
 print(spawnpoint_reference)
 
 for row_dirty in requestedSheetValues:
@@ -146,13 +84,14 @@ for row_dirty in requestedSheetValues:
     
     Lots of JSON POST request bodies, so it's pretty messy-looking. Just collapse the requests or the whole thing.
     """
-    # Sets to false if anything is set to the tile.
-    # If the tile is normal, this stays true and is used to set the tile to default at the end
+
+    # Sets to false if any effect is applied to the tile.
     text_default = True
 
+    # Cleans all the row stuff
     row = []
     for i in row_dirty:
-        row.append(re.sub('[^A-Za-z0-9]+', '', i.strip().lower()))
+        row.append(methods.clean_string(i))
 
     # Check to make sure that name of the row corresponds to an ID
     if textbox_reference.get(str(row[0]).strip().lower()) is not None:
@@ -161,33 +100,7 @@ for row_dirty in requestedSheetValues:
             # Something changed, so the tile no longer needs to be set to no effects
             text_default = False
             # The actual request body. Just keep this minimized
-            requests.append([
-                {
-                    "updateTextStyle": {
-                        "style": {
-                            "foregroundColor": {
-                                "opaqueColor": {
-                                    "rgbColor": {
-                                        "blue": 0.76,
-                                        "green": 0.482,
-                                        "red": 0.194
-                                    }
-                                }
-                            },
-                            "fontSize": {
-                                "unit": "PT",
-                                "magnitude": 8
-                            }
-                        },
-                        "textRange": {
-                            "type": "ALL"
-                        },
-                        "fields": "foregroundColor,fontSize",
-                        "objectId": str(textbox_reference.get(str(row[0]).strip().lower())) + ""
-                    }
-                }
-            ])
-            # print('Made a tile Blighted')
+            requests.append(JSON_methods.make_savage(row[0], textbox_reference))
 
         # Apply the savage effect
         if row[4] == "Savage":
@@ -335,7 +248,8 @@ for row_dirty in requestedSheetValues:
                     print("PinCreationException" + ex)
 
                 try:
-                    print(referencePinCreationTemplate.substitute(objectId=spawnedPinID,
+                    print(json.dumps(
+                        referencePinCreationTemplate.substitute(objectID=spawnedPinID,
                                                                   translateX=spawnpoint_reference.get(tribeName)[0],
                                                                   translateY=spawnpoint_reference.get(tribeName)[1],
                                                                   shapeType=pinSpecReference.get(tribeName).get(
@@ -351,7 +265,7 @@ for row_dirty in requestedSheetValues:
                                                                   solidFillGreen=pinSpecReference.get(tribeName).get(
                                                                       "solidFillGreen"),
                                                                   solidFillBlue=pinSpecReference.get(tribeName).get(
-                                                                      "solidFillBlue")))
+                                                                      "solidFillBlue"))), )
                 except:
                     pass
         except Exception as e:
