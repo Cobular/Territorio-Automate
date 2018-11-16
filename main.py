@@ -11,12 +11,10 @@ from __future__ import print_function
 from typing import Dict
 import JSON_methods
 import methods
-import json
 
 # <editor-fold desc="Author Data">
 __author__ = "Jacob Cover"
 __credits__ = ["Jacob Cover"]
-
 __license__ = "GPL"
 __version__ = "1.2.1"
 __maintainer__ = "Jacob Cover"
@@ -52,7 +50,7 @@ sheetID = '11iqzZM2B5nW4ShogiWC-n4_kNV9G6E-sJbk25WgRz58'
 # Stores the ID of the presentation to apply the effects to
 presentationID = '1QFH68wLkhyfVag4c2JJ1tcEhgSIXhP5W0x-4vRbRrNY'
 # Stores the range of the data from the sheet to process here. Currently only works for one sheet tab at a time
-dataRange = 'A2:AE240'
+dataRange = 'A2:AE373'
 # </editor-fold>
 
 # Authenticate with the google APIs
@@ -75,20 +73,15 @@ spawnpoint_reference = methods.create_spawnpoint_reference(requestedSlideValues)
 print(spawnpoint_reference)
 
 for row_dirty in requestedSheetValues:
-    """Iterate over the sheet and update the slide to match it
-    
-    Lots of JSON POST request bodies, so it's pretty messy-looking. Just collapse the requests or the whole thing.
-    """
-
-    # Sets to false if any effect is applied to the tile.
+    # Sets to false if any effect is applied to the tile's text. Only used for text color stuff.
     text_default = True
 
-    # Cleans all the row stuff
+    # Cleans all the row values to keep them from being problematic
     row = []
     for i in row_dirty:
         row.append(methods.clean_string(i))
 
-    # Check to make sure that name of the row corresponds to an ID
+    # Check to make sure that name of the row corresponds to an ID TODO: Make sure all elements on the slide have an ID!
     if textbox_reference.get(str(row[0]).strip().lower()) is not None:
 
         # Control blighted tiles
@@ -116,10 +109,9 @@ for row_dirty in requestedSheetValues:
                                                            pinSpecReference[row[10]], requestedSlideValues)
             requests_primary.append(requests_primary_temp)
             requests_secondary.append(requests_secondary_temp)
+            print("Pin spawned: " + row[0])
         except (KeyError, TypeError):
             pass
-
-
     else:
         # Just here for debugging, not critical. TODO: Change this to python logging
         print("Row without textbox of name: " + row[0])
@@ -131,8 +123,9 @@ body = {
 
 response_primary = SLIDES.presentations().batchUpdate(presentationId=presentationID, body=body).execute()
 
-# Send the secondary requests, if any
-body = {
-    'requests': requests_secondary
-}
-response_secondary = SLIDES.presentations().batchUpdate(presentationId=presentationID, body=body).execute()
+if requests_secondary.__len__() != 0:
+    # Send the secondary requests, if any
+    body = {
+        'requests': requests_secondary
+    }
+    response_secondary = SLIDES.presentations().batchUpdate(presentationId=presentationID, body=body).execute()
