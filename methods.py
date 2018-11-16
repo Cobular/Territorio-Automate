@@ -73,13 +73,12 @@ def create_textbox_reference(requested_slide_values, slide_number):
     for pageElement in requested_slide_values[slide_number]['pageElements']:
         try:
             # Finds the root level page elements
-            for textElement in pageElement['shape']['text']['textElements']:
-                try:
-                    textbox_reference.update(
-                        {clean_string(str(textElement)): clean_string(str(pageElement['objectId']))}
-                    )
-                except KeyError:
-                    pass
+
+            textbox_reference.update(
+                {clean_string(str(pageElement['shape']['text']['textElements'][1]['textRun']['content'])):
+                     str(pageElement['objectId'])}
+            )
+
         except KeyError:
             pass
         try:
@@ -89,7 +88,7 @@ def create_textbox_reference(requested_slide_values, slide_number):
                     # Tries to save the text element of the group. Will fail if it's the wrong groupElement.
                     textbox_reference.update(
                         {clean_string(str(groupElement['shape']['text']['textElements'][1]['textRun']['content'])):
-                             clean_string(str(groupElement['objectId']))}
+                             str(groupElement['objectId'])}
                     )
                 except KeyError:
                     pass
@@ -132,3 +131,13 @@ def create_spawnpoint_reference(requested_slide_values):
         spawnpoint_reference.update({shape_name.strip().lower(): line_transform})
     return spawnpoint_reference
 
+
+def find_slide_id(requested_slide_values, slide_page_number):
+    """ Gets the ID for a slide from the full JSON and the page number
+
+    :param requested_slide_values: The full JSON of the slide values
+    :param slide_page_number: The number ID of the slide is question. Starts at 0.
+    :return: ObjectId of the slide corresponding to ghe number
+    """
+
+    return requested_slide_values[slide_page_number]['objectId']
