@@ -97,17 +97,18 @@ def create_textbox_reference(requested_slide_values, slide_number):
     return textbox_reference
 
 
-def create_spawnpoint_reference(requested_slide_values):
+def create_spawnpoint_reference(requested_slide_values, slide_page_number):
     """ Creates the reference dict of tile names to spawnpoints
 
     :param requested_slide_values: A Google Slides Presentation JSON to parse.
+    :param slide_page_number; The page number of the slide to use
     :return spawnpoint_reference: A dict that associates the tile name and correct spawnpoint.
     """
     spawnpoint_reference = {}
 
-    for pageElement in requested_slide_values[0]['pageElements']:
+    for pageElement in requested_slide_values[slide_page_number]['pageElements']:
         shape_name = ""  # Need this variable to have this scope
-        line_transform = []  # type: list[int, int]
+        line_transform = []
         try:
             if pageElement['elementGroup'] is not None:
                 for groupElement in pageElement['elementGroup']['children']:
@@ -128,7 +129,7 @@ def create_spawnpoint_reference(requested_slide_values):
         except KeyError:
             pass
         # Actually updates the spawnpoint dict
-        spawnpoint_reference.update({shape_name.strip().lower(): line_transform})
+        spawnpoint_reference.update({shape_name: line_transform})
     return spawnpoint_reference
 
 

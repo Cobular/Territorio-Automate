@@ -105,17 +105,21 @@ def make_normal(tile_name, textbox_reference):
     return make_normal_request
 
 
-def spawn_pin(slide_page_number, tile_name, spawnpoint_reference, pin_creation_data, requested_slide_values):
+def spawn_pin(slide_page_number, tile_name, spawnpoint_reference, tribe_pin_data, unit_type, unit_type_data,
+              requested_slide_values):
     """ Spawns a pin created from the pin_creation_data at the spawnpoint corresponding to the tile name name
 
     :param slide_page_number: Slide number of the current page to spawn the pins onto
     :param tile_name: Name of the tile that needs to have a pin spawn
     :param spawnpoint_reference: Whole spawnpoint dict created earlier
-    :param pin_creation_data: Data for the specific tribe's pin to spawn
+    :param tribe_pin_data: Data for the specific tribe's pin to spawn. Must be for only one tribe, the tribe in question
+    :param unit_type: The type of unit, the 2 letter code in the google sheet
+    :param unit_type_data: Data for the shape types associated with certain units
     :param requested_slide_values: The whole slide JSON data
     :return reference_pin_creation_dict_priority_final: Returns the ready-to-use request to create a pin. Must be fired first.
     :return reference_pin_creation_dict_secondary_final: Returns the ready-to-use request to add effects to the pin to make it look right.
     """
+
     try:
         alpha = ascii_letters + digits + "_"
         spawned_pin_id = "".join(random.choice(alpha) for i in range(45))
@@ -191,18 +195,18 @@ def spawn_pin(slide_page_number, tile_name, spawnpoint_reference, pin_creation_d
             objectID=spawned_pin_id,
             translateX=spawnpoint_reference.get(tile_name)[0],
             translateY=spawnpoint_reference.get(tile_name)[1],
-            shapeType=pin_creation_data.get("shapeType"))
+            shapeType=unit_type_data.get(clean_string(unit_type)))
 
         reference_pin_creation_dict_secondary_final = reference_pin_creation_dict_secondary_template.substitute(
             objectID=spawned_pin_id,
-            outlineFillRed=pin_creation_data.get("outlineFillRed"),
-            outlineFillGreen=pin_creation_data.get("outlineFillGreen"),
-            outlineFillBlue=pin_creation_data.get("outlineFillBlue"),
-            solidFillRed=pin_creation_data.get("solidFillRed"),
-            solidFillGreen=pin_creation_data.get("solidFillGreen"),
-            solidFillBlue=pin_creation_data.get("solidFillBlue"))
+            outlineFillRed=tribe_pin_data.get("outlineFillRed"),
+            outlineFillGreen=tribe_pin_data.get("outlineFillGreen"),
+            outlineFillBlue=tribe_pin_data.get("outlineFillBlue"),
+            solidFillRed=tribe_pin_data.get("solidFillRed"),
+            solidFillGreen=tribe_pin_data.get("solidFillGreen"),
+            solidFillBlue=tribe_pin_data.get("solidFillBlue"))
 
-        return json.loads(str(reference_pin_creation_dict_priority_final)), \
+        return json.loads(reference_pin_creation_dict_priority_final), \
                json.loads(reference_pin_creation_dict_secondary_final)
     except TypeError:
         pass
