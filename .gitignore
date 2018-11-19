@@ -10,3 +10,9 @@ storage\.json
 \.idea/workspace\.xml
 
 sheetsData\.json
+
+JSON_for_testing/
+
+storage_main\.json
+
+storage_pawnGenerate\.json
