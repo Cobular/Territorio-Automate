@@ -48,18 +48,18 @@ def download(slides, sheets, sheet_id, presentation_id, data_range):
     return requestedSheetValues, requestedSlideValues
 
 
-def save_data(requestedSlideValues, requestedSheetValues):
+def save_data(requested_slide_values, requested_sheet_values):
     """ Saves the slides abd sheets JSON to the disk for manual review
 
-    :param requestedSlideValues: The JSON for the Google Slide Presentation. Saved as JSON_for_testing/sheetsData_main.json
-    :param requestedSheetValues: The JSON for the Google Sheet. Saved as JSON_for_testing/slidesData_main.json
+    :param requested_slide_values: The JSON for the Google Slide Presentation. Saved as JSON_for_testing/sheetsData_main.json
+    :param requested_sheet_values: The JSON for the Google Sheet. Saved as JSON_for_testing/slidesData_main.json
     :return: Nothing
     """
     with open('JSON_for_testing/sheetsData_main.json', 'w') as sheetsDataFile:
-        json.dump(requestedSheetValues, sheetsDataFile, indent=4)
+        json.dump(requested_sheet_values, sheetsDataFile, indent=4)
 
     with open('JSON_for_testing/slidesData_main.json', 'w') as slidesDataFile:
-        json.dump(requestedSlideValues, slidesDataFile, indent=4)
+        json.dump(requested_slide_values, slidesDataFile, indent=4)
 
 
 def create_textbox_reference(requested_slide_values, slide_number):
